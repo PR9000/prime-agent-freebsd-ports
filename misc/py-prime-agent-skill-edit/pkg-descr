@@ -1,0 +1,4 @@
+Prime Agent edit skill: in-context file editing over the host bridge
+
+This is a Python skill for the Prime Agent coding agent, extracted
+from the prime-agent v0.7.2 npm release tarball.

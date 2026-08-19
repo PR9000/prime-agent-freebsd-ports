@@ -1,0 +1,11 @@
+Meta-port that installs the scientific stack dependencies for Prime Agent.
+
+Provides the scientific Python ecosystem (NumPy, SciPy, Pandas, Matplotlib)
+integrated with Prime Agent's IPython runtime kernel.
+
+Packages included:
+  math/py-numpy
+  math/py-pandas
+  science/py-scipy
+  math/py-matplotlib
+  misc/py-prime-agent-runtime

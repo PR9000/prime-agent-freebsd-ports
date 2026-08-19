@@ -1,0 +1,4 @@
+Notion integration skill for Prime Agent (Notion's official hosted MCP server).
+
+This is a Python skill for the Prime Agent coding agent, extracted
+from the prime-agent v0.7.2 npm release tarball.
