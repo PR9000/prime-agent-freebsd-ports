@@ -17,29 +17,48 @@ npm tarball** as the distfile. No TypeScript compilation, no uv, no pip, no venv
 
 ## Why the release assets come from a fork
 
-As of v0.7.3, the release tarballs used by these ports (`github_assets_0_7_3/`)
-are built from [PR9000/prime-agent](https://github.com/PR9000/prime-agent)
-rather than directly from upstream. This is because the fork carries one patch
-not (yet) present upstream:
+The release tarballs consumed by `MASTER_SITES` in these ports are
+built from [PR9000/prime-agent](https://github.com/PR9000/prime-agent)
+rather than directly from upstream. This is because the fork carries
+one patch not yet present upstream:
 
 - **FreeBSD `pkg(8)` install-method detection** in
   `packages/coding-agent/src/config.ts`. Without this patch,
   `detectInstallMethod()` falls through to the `"npm"` heuristic for
-  pkg-managed installs (the package lands under `.../lib/node_modules/`),
-  producing an `npm install -g` update instruction that doesn't apply and
-  can't write to the pkg-managed path anyway. The patch adds a
-  `"freebsd-pkg"` case, following the existing `"homebrew"` pattern, that
-  detects the install via `pkg which` and points the user to
-  `pkg upgrade` instead.
+  pkg-managed installs, producing an `npm install -g` update
+  instruction that doesn't apply and can't write to the pkg-managed
+  path anyway. The patch adds a `"freebsd-pkg"` case, following the
+  existing `"homebrew"` pattern, and is being exercised in testing
+  as part of this port set.
 
-  Upstream status: not yet submitted / pending review — update this section
-  once a PR is opened and again once merged. Once merged and released
-  upstream, `MASTER_SITES` in the `prime-agent` port can point back to
-  `PrimeIntellect-ai/prime-agent` directly and this fork dependency goes away.
+  **Build process:** the fork inherits upstream's own release
+  workflow, so pushing the patch commits triggers the same build
+  pipeline upstream uses. The resulting tarballs are downloaded from
+  the fork's release and re-uploaded as this repo's own GitHub
+  Release assets (not automated end-to-end yet — a manual
+  download/upload step for now).
 
-The fork's own GitHub Actions release workflow (inherited from upstream)
-builds and publishes the tarballs consumed by `MASTER_SITES` — no manual
-compilation happens on the FreeBSD side.
+  **Upstream status:** raised as a
+  [Discussion](https://github.com/PrimeIntellect-ai/prime-agent/discussions/1572) with the maintainers before
+  opening a PR, per their contribution policy. Once a PR is invited,
+  opened, and merged upstream, `MASTER_SITES` can point back to
+  `PrimeIntellect-ai/prime-agent` directly and this fork dependency
+  goes away.
+
+## Upstream FreeBSD Ports Collection
+
+`devel/py-tyro` (a runtime dependency of `prime-agent`, pinned at
+`>=1.0.15`) did not exist in the official FreeBSD Ports Collection.
+A new-port submission has been filed:
+[Bug 297523 — [NEW PORT] devel/py-tyro](https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=297523)
+(status: New, awaiting review as of 2026-08).
+
+Until this lands in the ports tree, `py-tyro` is included in this
+repo (`devel/py-tyro/`) and must be built and installed the same way
+as the other ports below (symlinked into `/usr/ports/`, then
+`make clean deinstall package install`). Once merged upstream, it
+can be dropped from this repo and consumed directly from the
+official tree via `RUN_DEPENDS`.
 
 ## Known limitation: `prime-agent update`
 
@@ -56,7 +75,7 @@ doas pkg upgrade prime-agent
 Never rely on `prime-agent update` itself to keep a pkg-managed install
 current.
 
-### Port inventory (19 ports)
+### Port inventory (20 ports)
 
 #### Node.js ports (4)
 | Port | Package | Description |
@@ -94,13 +113,18 @@ version on a given system (currently `py312-*`) depends on the default
 |---|---|---|
 | `prime-agent-skills-docs/` | `prime-agent-skills-docs` | Prompt/Markdown skills (`prime-intellect`, `skill-creator`) |
 
-> **Note on totals:** the table above lists 19 port *directories*
-> (4 + 14 + 1). The number of *installed packages* reported by
+> **Note on totals:** the table above lists 20 port *directories*
+> (4 + 14 + 1 + 1). The number of *installed packages* reported by
 > `pkg info "*prime*"` can differ slightly depending on whether meta-ports
 > (`py-prime-agent-skills`, `py-prime-agent-science`) register as separate
 > package entries on your system. Run `pkg info "*prime*" | wc -l` after a
 > full install and treat that as the source of truth for your system, rather
 > than a number hardcoded here.
+
+#### Other dependency ports (1)
+| Port | Package | Description |
+|---|---|---|
+| `devel/py-tyro/` | `py312-tyro` | New port, not yet in the official tree (see "Upstream FreeBSD Ports Collection" below) |
 
 ### Key techniques
 
@@ -151,6 +175,9 @@ for d in prime-agent prime-agent-core prime-agent-ai prime-agent-tui prime-agent
          py-prime-agent-skill-websearch; do
   ln -s "$(pwd)/$d" "/usr/ports/misc/$(basename $d)"
 done
+
+# py-tyro is categorized devel/, not misc/ — link it separately:
+ln -s "$(pwd)/devel/py-tyro" "/usr/ports/devel/py-tyro"
 
 # 2. Build prime-agent port (as root):
 cd /usr/ports/misc/prime-agent
