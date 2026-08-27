@@ -1,9 +1,9 @@
---- pyproject.toml.orig	2026-08-15 17:47:35 UTC
+--- pyproject.toml.orig	2026-08-27 12:00:00 UTC
 +++ pyproject.toml
-@@ -5,7 +5,7 @@ dependencies = [
- requires-python = ">=3.10"
+@@ -7,7 +7,7 @@ requires-python = ">=3.11"
  dependencies = [
    "ipykernel",
+   "mcp>=2,<3",
 -  "nest-asyncio",
 +  "nest-asyncio2",
    "tyro",

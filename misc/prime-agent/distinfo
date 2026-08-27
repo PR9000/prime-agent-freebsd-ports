@@ -1,3 +1,9 @@
-TIMESTAMP = 1787178340
-SHA256 (prime-agent-0.7.3.tgz) = 2345cd4259c8adcfd50896d370b79fc666ad928ad193df21c3e845ceead2270d
-SIZE (prime-agent-0.7.3.tgz) = 9386088
+TIMESTAMP = 1787827567
+SHA256 (prime-agent-0.8.1.tgz) = 46c24db1782dd31adc35d5c6cbcc75564faba6ced3bf2ccf03d836ee77134475
+SIZE (prime-agent-0.8.1.tgz) = 9616163
+SHA256 (prime-agent-ai-0.8.1.tgz) = f6c3bdb6093bc24a327546fe865ef9a4a172c734fcd4c4093e30c19476f0134d
+SIZE (prime-agent-ai-0.8.1.tgz) = 552864
+SHA256 (prime-agent-core-0.8.1.tgz) = 0cc3660953545f8ac9a7e704fcb9875f954d58c3085304080ef615c280aa5748
+SIZE (prime-agent-core-0.8.1.tgz) = 59520
+SHA256 (prime-agent-tui-0.8.1.tgz) = bd07bccee0ca495565b1d62e9411f3fdebe49e3dfa52870564f08af5e61fde15
+SIZE (prime-agent-tui-0.8.1.tgz) = 427328

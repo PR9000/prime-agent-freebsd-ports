@@ -1,9 +1,0 @@
-prime-agent-tui
-
-Terminal User Interface library for Prime Agent. Provides the TUI
-components (custom editor, keybindings manager, expandable text) used
-by the Prime Agent interactive mode.
-
-This is a sub-package of the Prime Agent monorepo, distributed as
-a pre-built npm package. The dist/ directory contains compiled
-TypeScript output (JavaScript + type declarations).

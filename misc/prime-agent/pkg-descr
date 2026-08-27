@@ -1,23 +1,11 @@
-prime-agent
+Prime Agent is an open-source, self-improving AI coding assistant
+powered by an IPython-backed execution kernel. It supports multi-turn
+agentic coding, multi-provider LLMs, tool calling, conversation
+persistence, and a rich terminal user interface.
 
-Self-improving coding agent with IPython-backed kernel. Features
-include LLM provider integration, conversation state persistence,
-attachment handling, and a plugin/skill system.
-
-This is the main coding-agent sub-package of the Prime Agent monorepo,
-distributed as a pre-built npm package. The dist/ directory contains
-compiled TypeScript output (ESM bundle).
-
-Python skills and kernel runtime are provided by separate ports:
-  - py-prime-agent-runtime (kernel-side runtime shim, rlm module)
-  - py-prime-agent-skill-* (11 individual skill ports)
-  - py-prime-agent-skills (meta-port installing all 11 skills)
-  - py-prime-agent-science (meta-port installing scientific stack)
-
-Node.js runtime dependencies:
-  - prime-agent-core (agent engine)
-  - prime-agent-ai (LLM provider abstraction)
-  - prime-agent-tui (terminal UI)
-
-The zeromq native addon is built against system libzmq4 via CMake
-with ZMQ_SHARED=true.
+Features:
+  - Interactive terminal UI and autonomous agent loop
+  - Embedded Python kernel with ZeroMQ communication
+  - Built-in skills for web search, linear, notion, images, and tools
+  - Support for multiple LLM providers (Prime Intellect, Anthropic,
+    OpenAI, etc.)

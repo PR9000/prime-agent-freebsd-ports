@@ -1,11 +1,14 @@
 PORTNAME=	prime-agent
-DISTVERSION=	0.7.3
-CATEGORIES=	misc python # machine-learning
-#MASTER_SITES=	https://github.com/PrimeIntellect-ai/prime-agent/releases/download/v${DISTVERSION}/
-MASTER_SITES=	LOCAL/
+DISTVERSION=	0.8.1
+CATEGORIES=	misc python
+MASTER_SITES=	https://github.com/PrimeIntellect-ai/prime-agent/releases/download/v${DISTVERSION}/
+DISTFILES=	prime-agent-${DISTVERSION}.tgz \
+		prime-agent-ai-${DISTVERSION}.tgz \
+		prime-agent-core-${DISTVERSION}.tgz \
+		prime-agent-tui-${DISTVERSION}.tgz
 
 MAINTAINER=	pr9000@tutamail.com
-COMMENT=	Self-improving coding and agent with IPython-backed kernel
+COMMENT=	Self-improving AI coding assistant with IPython-backed kernel
 WWW=		https://github.com/PrimeIntellect-ai/prime-agent
 
 LICENSE=	MIT
@@ -15,9 +18,9 @@ BUILD_DEPENDS=	cmake:devel/cmake \
 		ninja:devel/ninja \
 		pkgconf:devel/pkgconf \
 		libzmq4>0:net/libzmq4 \
-		npm-node22>0:www/npm-node22
-
-RUN_DEPENDS=	${PYTHON_PKGNAMEPREFIX}dill>=0.3:devel/py-dill@${PY_FLAVOR} \
+		npm-node24>0:www/npm-node24
+RUN_DEPENDS=	${PYTHON_PKGNAMEPREFIX}prime-agent-runtime>=0:misc/py-prime-agent-runtime@${PY_FLAVOR} \
+		${PYTHON_PKGNAMEPREFIX}dill>=0.3:devel/py-dill@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}ipykernel>=6.0:devel/py-ipykernel@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}lxml>=0:devel/py-lxml@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}nest-asyncio2>=1.0:devel/py-nest-asyncio2@${PY_FLAVOR} \
@@ -25,11 +28,7 @@ RUN_DEPENDS=	${PYTHON_PKGNAMEPREFIX}dill>=0.3:devel/py-dill@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}pyyaml>=0:devel/py-pyyaml@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}tyro>=1.0.15:devel/py-tyro@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}pillow>=0:graphics/py-pillow@${PY_FLAVOR} \
-		prime-agent-ai>0:misc/prime-agent-ai \
-		prime-agent-core>0:misc/prime-agent-core \
-		prime-agent-tui>0:misc/prime-agent-tui \
 		${PYTHON_PKGNAMEPREFIX}mcp>=0:misc/py-mcp@${PY_FLAVOR} \
-		${PYTHON_PKGNAMEPREFIX}prime-agent-runtime>0:misc/py-prime-agent-runtime@${PY_FLAVOR} \
 		libzmq4>0:net/libzmq4 \
 		${PYTHON_PKGNAMEPREFIX}pyzmq>=0:net/py-pyzmq@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}tomli>=0:textproc/py-tomli@${PY_FLAVOR} \
@@ -38,28 +37,49 @@ RUN_DEPENDS=	${PYTHON_PKGNAMEPREFIX}dill>=0.3:devel/py-dill@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}python-dotenv>=0:www/py-python-dotenv@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}requests>=0:www/py-requests@${PY_FLAVOR} \
 		rg:textproc/ripgrep \
-		fd:misc/fd-find
+		fd:sysutils/fd
 
-USES=		compiler:c++20-lang nodejs:22,build,run python:3.10+ tar:tgz
+USES=		compiler:c++20-lang nodejs:24,build,run python:3.10+
 
-WRKSRC=		${WRKDIR}/package
+SUB_FILES=	pkg-message
+SUB_LIST=	PYTHON_PKGNAMEPREFIX=${PYTHON_PKGNAMEPREFIX}
 
-NODE_MODULES_DIR=	${STAGEDIR}${PREFIX}/lib/node_modules
-NPM_PACKAGE=		@earendil-works/pi-coding-agent
-NPM_PACKAGE_DIR=	${NODE_MODULES_DIR}/${NPM_PACKAGE}
-PRIME_AGENT_CLI_FILE=	${PREFIX}/lib/node_modules/${NPM_PACKAGE}/dist/bundle/cli.js
-PRIME_AGENT_BIN=		${STAGEDIR}${PREFIX}/bin/prime-agent
+WRKSRC=		${WRKDIR}
+WRKSRC_MAIN=	${WRKDIR}/pkg-main
+WRKSRC_AI=	${WRKDIR}/pkg-ai
+WRKSRC_CORE=	${WRKDIR}/pkg-core
+WRKSRC_TUI=	${WRKDIR}/pkg-tui
+
+NODE_MODULES_BASE=	${STAGEDIR}${PREFIX}/lib/node_modules/@earendil-works
+PRIME_AGENT_CLI_FILE=	${PREFIX}/lib/node_modules/@earendil-works/pi-coding-agent/dist/bundle/cli.js
+PRIME_AGENT_BIN=	${STAGEDIR}${PREFIX}/bin/prime-agent
+
+do-extract:
+	@${MKDIR} ${WRKSRC_MAIN} ${WRKSRC_AI} ${WRKSRC_CORE} ${WRKSRC_TUI}
+	@${TAR} -xzf ${DISTDIR}/prime-agent-${DISTVERSION}.tgz -C ${WRKSRC_MAIN} --strip-components 1
+	@${TAR} -xzf ${DISTDIR}/prime-agent-ai-${DISTVERSION}.tgz -C ${WRKSRC_AI} --strip-components 1
+	@${TAR} -xzf ${DISTDIR}/prime-agent-core-${DISTVERSION}.tgz -C ${WRKSRC_CORE} --strip-components 1
+	@${TAR} -xzf ${DISTDIR}/prime-agent-tui-${DISTVERSION}.tgz -C ${WRKSRC_TUI} --strip-components 1
 
 do-build:
-	@${ECHO_MSG} "===>  npm install (scripts ignored)"
+	@${ECHO_MSG} "===>  Building @earendil-works/pi-ai"
 	${MKDIR} ${WRKDIR}/.npm-cache
-	cd ${WRKSRC} && ${SETENV} npm_config_cache=${WRKDIR}/.npm-cache \
+	cd ${WRKSRC_AI} && ${SETENV} npm_config_cache=${WRKDIR}/.npm-cache \
+		npm i --no-fund --no-audit --no-optional --ignore-scripts
+	@${ECHO_MSG} "===>  Building @earendil-works/pi-agent-core"
+	cd ${WRKSRC_CORE} && ${SETENV} npm_config_cache=${WRKDIR}/.npm-cache \
+		npm i --no-fund --no-audit --no-optional --ignore-scripts
+	@${ECHO_MSG} "===>  Building @earendil-works/pi-tui"
+	cd ${WRKSRC_TUI} && ${SETENV} npm_config_cache=${WRKDIR}/.npm-cache \
+		npm i --no-fund --no-audit --no-optional --ignore-scripts
+	@${ECHO_MSG} "===>  Building @earendil-works/pi-coding-agent (main)"
+	cd ${WRKSRC_MAIN} && ${SETENV} npm_config_cache=${WRKDIR}/.npm-cache \
 		npm i --no-fund --no-audit --no-optional --ignore-scripts
 	@${ECHO_MSG} "===>  Patching zeromq C++17 compatibility"
 	@${REINPLACE_CMD} -e 's/immediate\.contains(option)/immediate.count(option) > 0/g' \
-		${WRKSRC}/node_modules/zeromq/src/socket.cc
+		${WRKSRC_MAIN}/node_modules/zeromq/src/socket.cc
 	@${ECHO_MSG} "===>  Patching zeromq CMakeLists.txt (offline project_options stubs)"
-	${MKDIR} ${WRKSRC}/node_modules/zeromq/.port_stubs
+	${MKDIR} ${WRKSRC_MAIN}/node_modules/zeromq/.port_stubs
 	${PRINTF} '%s\n' \
 		'function(project_options)' \
 		'endfunction()' \
@@ -71,7 +91,7 @@ do-build:
 		'function(target_include_system_directories target)' \
 		'  target_include_directories($${target} $${ARGN})' \
 		'endfunction()' \
-		> ${WRKSRC}/node_modules/zeromq/.port_stubs/stubs.cmake
+		> ${WRKSRC_MAIN}/node_modules/zeromq/.port_stubs/stubs.cmake
 	@${REINPLACE_CMD} \
 		-e 's#include(FetchContent)#include(.port_stubs/stubs.cmake)#' \
 		-e '/# Add project_options from/d' \
@@ -79,64 +99,75 @@ do-build:
 		-e '/FetchContent_Declare(/,/)/d' \
 		-e '/FetchContent_MakeAvailable/d' \
 		-e '/_project_options_SOURCE_DIR/d' \
-		${WRKSRC}/node_modules/zeromq/CMakeLists.txt
-	@${ECHO_MSG} "===>  zeromq v6.6.0: npm_config_zmq_shared=true links to system libzmq4"
+		${WRKSRC_MAIN}/node_modules/zeromq/CMakeLists.txt
 	@${ECHO_MSG} "===>  Compiling zeromq native addon (libzmq4 from system)"
-	cd ${WRKSRC}/node_modules/zeromq && ${SETENV} \
+	cd ${WRKSRC_MAIN}/node_modules/zeromq && ${SETENV} \
 		npm_config_zmq_shared=true \
 		CMAKE_CXX_STANDARD=20 \
 		PATH=${LOCALBASE}/bin:$${PATH} \
-		${LOCALBASE}/bin/node ${WRKSRC}/node_modules/cmake-ts/build/main.js nativeonly
+		${LOCALBASE}/bin/node ${WRKSRC_MAIN}/node_modules/cmake-ts/build/main.js nativeonly
 	@${ECHO_MSG} "===>  Cleaning cmake artifacts"
-	${RM} -r ${WRKSRC}/node_modules/zeromq/staging 2>/dev/null || ${TRUE}
-	${RM} -f ${WRKSRC}/node_modules/zeromq/compile_commands.json 2>/dev/null || ${TRUE}
-	${FIND} ${WRKSRC}/node_modules/zeromq -type l -delete 2>/dev/null || ${TRUE}
-	${RM} -rf ${WRKSRC}/node_modules/zeromq/script 2>/dev/null || ${TRUE}
-	${FIND} ${WRKSRC}/node_modules/zeromq/build -name "*.ninja" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${WRKSRC}/node_modules/zeromq/build -name "CMakeCache.txt" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${WRKSRC}/node_modules/zeromq/build -name "*.cmake" -delete 2>/dev/null || ${TRUE}
-	@${ECHO_MSG} "===>  Cleaning node_modules (symlinks, .bin, lock)"
-	${FIND} ${WRKSRC}/node_modules -type d -name ".bin" -exec ${RM} -r {} + 2>/dev/null || ${TRUE}
-	${FIND} ${WRKSRC}/node_modules -type l -delete 2>/dev/null || ${TRUE}
-	${RM} -f ${WRKSRC}/node_modules/.package-lock.json 2>/dev/null || ${TRUE}
-	@${ECHO_MSG} "===>  Pruning non-runtime node_modules files (types, maps, source, tests)"
-	${FIND} ${WRKSRC}/node_modules -name "*.d.ts" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${WRKSRC}/node_modules -name "*.d.cts" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${WRKSRC}/node_modules -name "*.js.map" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${WRKSRC}/node_modules -name "*.cjs.map" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${WRKSRC}/node_modules -name "*.ts" -not -name "*.d.ts" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${WRKSRC}/node_modules -type d -name "test" -not -path "*/node_modules/*" -exec ${RM} -r {} + 2>/dev/null || ${TRUE}
-	${FIND} ${WRKSRC}/node_modules -type d -name "__tests__" -exec ${RM} -r {} + 2>/dev/null || ${TRUE}
-	${FIND} ${WRKSRC}/node_modules -depth -type d -empty -delete 2>/dev/null || ${TRUE}
-	@${ECHO_MSG} "===>  Removing bundled Python skills and runtime (packaged in dedicated ports)"
-	${RM} -rf ${WRKSRC}/dist/skills ${WRKSRC}/dist/prime-agent-runtime 2>/dev/null || ${TRUE}
-	${RM} -rf ${WRKSRC}/examples/skills 2>/dev/null || ${TRUE}
+	${RM} -r ${WRKSRC_MAIN}/node_modules/zeromq/staging 2>/dev/null || ${TRUE}
+	${RM} -f ${WRKSRC_MAIN}/node_modules/zeromq/compile_commands.json 2>/dev/null || ${TRUE}
+	${FIND} ${WRKSRC_MAIN}/node_modules/zeromq -type l -delete 2>/dev/null || ${TRUE}
+	${RM} -rf ${WRKSRC_MAIN}/node_modules/zeromq/script 2>/dev/null || ${TRUE}
+	${FIND} ${WRKSRC_MAIN}/node_modules/zeromq/build -name "*.ninja" -delete 2>/dev/null || ${TRUE}
+	${FIND} ${WRKSRC_MAIN}/node_modules/zeromq/build -name "CMakeCache.txt" -delete 2>/dev/null || ${TRUE}
+	${FIND} ${WRKSRC_MAIN}/node_modules/zeromq/build -name "*.cmake" -delete 2>/dev/null || ${TRUE}
+	@${ECHO_MSG} "===>  Cleaning node_modules across components"
+	${FIND} ${WRKSRC_MAIN}/node_modules ${WRKSRC_AI}/node_modules ${WRKSRC_CORE}/node_modules ${WRKSRC_TUI}/node_modules -type d -name ".bin" -exec ${RM} -r {} + 2>/dev/null || ${TRUE}
+	${FIND} ${WRKSRC_MAIN}/node_modules ${WRKSRC_AI}/node_modules ${WRKSRC_CORE}/node_modules ${WRKSRC_TUI}/node_modules -type l -delete 2>/dev/null || ${TRUE}
+	${RM} -f ${WRKSRC_MAIN}/node_modules/.package-lock.json ${WRKSRC_AI}/node_modules/.package-lock.json ${WRKSRC_CORE}/node_modules/.package-lock.json ${WRKSRC_TUI}/node_modules/.package-lock.json 2>/dev/null || ${TRUE}
+	# Keep dist/skills for built-in SKILL.md discovery
+	${RM} -rf ${WRKSRC_MAIN}/dist/prime-agent-runtime 2>/dev/null || ${TRUE}
+	${RM} -rf ${WRKSRC_MAIN}/examples/skills 2>/dev/null || ${TRUE}
 
 do-install:
-	@${ECHO_MSG} "===>  Placing files to ${NPM_PACKAGE_DIR}"
-	${MKDIR} ${NPM_PACKAGE_DIR}
+	@${ECHO_MSG} "===>  Installing components to ${NODE_MODULES_BASE}"
+	${MKDIR} ${NODE_MODULES_BASE}/pi-coding-agent
+	${MKDIR} ${NODE_MODULES_BASE}/pi-ai
+	${MKDIR} ${NODE_MODULES_BASE}/pi-agent-core
+	${MKDIR} ${NODE_MODULES_BASE}/pi-tui
 	${MKDIR} ${STAGEDIR}${PREFIX}/bin
-	(cd ${WRKSRC} && ${COPYTREE_SHARE} dist ${NPM_PACKAGE_DIR})
-	(cd ${WRKSRC} && ${COPYTREE_SHARE} docs ${NPM_PACKAGE_DIR})
-	(cd ${WRKSRC} && ${COPYTREE_SHARE} examples ${NPM_PACKAGE_DIR})
-	(cd ${WRKSRC} && ${COPYTREE_SHARE} node_modules ${NPM_PACKAGE_DIR})
-	${INSTALL_DATA} ${WRKSRC}/package.json ${NPM_PACKAGE_DIR}/
-	${INSTALL_SCRIPT} ${WRKSRC}/postinstall.cjs ${NPM_PACKAGE_DIR}/
-	${INSTALL_DATA} ${WRKSRC}/README.md ${NPM_PACKAGE_DIR}/
-	${INSTALL_DATA} ${WRKSRC}/CHANGELOG.md ${NPM_PACKAGE_DIR}/
+	# Install pi-coding-agent
+	(cd ${WRKSRC_MAIN} && ${COPYTREE_SHARE} dist ${NODE_MODULES_BASE}/pi-coding-agent)
+	(cd ${WRKSRC_MAIN} && ${COPYTREE_SHARE} docs ${NODE_MODULES_BASE}/pi-coding-agent)
+	(cd ${WRKSRC_MAIN} && ${COPYTREE_SHARE} examples ${NODE_MODULES_BASE}/pi-coding-agent)
+	(cd ${WRKSRC_MAIN} && ${COPYTREE_SHARE} node_modules ${NODE_MODULES_BASE}/pi-coding-agent)
+	${INSTALL_DATA} ${WRKSRC_MAIN}/package.json ${NODE_MODULES_BASE}/pi-coding-agent/
+	${INSTALL_SCRIPT} ${WRKSRC_MAIN}/postinstall.cjs ${NODE_MODULES_BASE}/pi-coding-agent/
+	${INSTALL_DATA} ${WRKSRC_MAIN}/README.md ${NODE_MODULES_BASE}/pi-coding-agent/
+	${INSTALL_DATA} ${WRKSRC_MAIN}/CHANGELOG.md ${NODE_MODULES_BASE}/pi-coding-agent/
+	# Install pi-ai
+	(cd ${WRKSRC_AI} && ${COPYTREE_SHARE} dist ${NODE_MODULES_BASE}/pi-ai)
+	(cd ${WRKSRC_AI} && ${COPYTREE_SHARE} node_modules ${NODE_MODULES_BASE}/pi-ai)
+	${INSTALL_DATA} ${WRKSRC_AI}/package.json ${NODE_MODULES_BASE}/pi-ai/
+	${INSTALL_DATA} ${WRKSRC_AI}/README.md ${NODE_MODULES_BASE}/pi-ai/
+	# Install pi-agent-core
+	(cd ${WRKSRC_CORE} && ${COPYTREE_SHARE} dist ${NODE_MODULES_BASE}/pi-agent-core)
+	(cd ${WRKSRC_CORE} && ${COPYTREE_SHARE} node_modules ${NODE_MODULES_BASE}/pi-agent-core)
+	${INSTALL_DATA} ${WRKSRC_CORE}/package.json ${NODE_MODULES_BASE}/pi-agent-core/
+	${INSTALL_DATA} ${WRKSRC_CORE}/README.md ${NODE_MODULES_BASE}/pi-agent-core/
+	# Install pi-tui
+	(cd ${WRKSRC_TUI} && ${COPYTREE_SHARE} dist ${NODE_MODULES_BASE}/pi-tui)
+	(cd ${WRKSRC_TUI} && ${COPYTREE_SHARE} node_modules ${NODE_MODULES_BASE}/pi-tui)
+	${INSTALL_DATA} ${WRKSRC_TUI}/package.json ${NODE_MODULES_BASE}/pi-tui/
+	${INSTALL_DATA} ${WRKSRC_TUI}/README.md ${NODE_MODULES_BASE}/pi-tui/
+	# Install CLI wrapper
 	@${ECHO_MSG} "===>  Installing CLI wrapper"
 	${PRINTF} '#!/bin/sh\nPRIME_AGENT_KERNEL_PYTHON="${PYTHON_CMD}" \\\nPRIME_AGENT_BOOTSTRAP_KERNEL_ON_INSTALL=0 \\\nPRIME_AGENT_BOOTSTRAP_TOOLS_ON_INSTALL=0 \\\nexec ${LOCALBASE}/bin/node ${PRIME_AGENT_CLI_FILE} "$$@"\n' > ${WRKDIR}/prime-agent
 	${INSTALL_SCRIPT} ${WRKDIR}/prime-agent ${PRIME_AGENT_BIN}
 
 post-install:
-	@${ECHO_MSG} "===>  Pruning non-runtime files from stage dir (dist, docs, examples, node_modules)"
-	${FIND} ${NPM_PACKAGE_DIR} -name "*.d.ts" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${NPM_PACKAGE_DIR} -name "*.d.cts" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${NPM_PACKAGE_DIR} -name "*.js.map" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${NPM_PACKAGE_DIR} -name "*.cjs.map" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${NPM_PACKAGE_DIR} -name "*.ts" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${NPM_PACKAGE_DIR} -type d -name "test" -exec ${RM} -r {} + 2>/dev/null || ${TRUE}
-	${FIND} ${NPM_PACKAGE_DIR} -type d -name "__tests__" -exec ${RM} -r {} + 2>/dev/null || ${TRUE}
-	${FIND} ${NPM_PACKAGE_DIR} -depth -type d -empty -delete 2>/dev/null || ${TRUE}
+	@${ECHO_MSG} "===>  Pruning development artifacts"
+	${FIND} ${NODE_MODULES_BASE} -name "*.d.ts" -delete 2>/dev/null || ${TRUE}
+	${FIND} ${NODE_MODULES_BASE} -name "*.d.cts" -delete 2>/dev/null || ${TRUE}
+	${FIND} ${NODE_MODULES_BASE} -name "*.js.map" -delete 2>/dev/null || ${TRUE}
+	${FIND} ${NODE_MODULES_BASE} -name "*.cjs.map" -delete 2>/dev/null || ${TRUE}
+	${FIND} ${NODE_MODULES_BASE} -name "*.ts" -delete 2>/dev/null || ${TRUE}
+	${FIND} ${NODE_MODULES_BASE} -name "*.orig" -delete 2>/dev/null || ${TRUE}
+	${FIND} ${NODE_MODULES_BASE} -type d -name "test" -exec ${RM} -r {} + 2>/dev/null || ${TRUE}
+	${FIND} ${NODE_MODULES_BASE} -type d -name "__tests__" -exec ${RM} -r {} + 2>/dev/null || ${TRUE}
+	${FIND} ${NODE_MODULES_BASE} -depth -type d -empty -delete 2>/dev/null || ${TRUE}
 
 .include <bsd.port.mk>
