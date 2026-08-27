@@ -42,10 +42,10 @@ Prime Agent by Prime Intellect consists of **two native ports** in the FreeBSD P
 
 ### Port Inventory
 
-| Port | Package | Description |
-|---|---|---|
-| [`misc/prime-agent`](file:///home/antigravity/github/prime-agent-freebsd-ports/misc/prime-agent) | `prime-agent` | Full Node.js application, TUI, CLI entrypoints, and built-in skill discovery |
-| [`misc/py-prime-agent-runtime`](file:///home/antigravity/github/prime-agent-freebsd-ports/misc/py-prime-agent-runtime) | `py312-prime-agent-runtime` | Python runtime module (`rlm`) for the IPython execution kernel |
+| Port | Package | FreeBSD Bugzilla | Description |
+|---|---|---|---|
+| [`misc/prime-agent`](file:///home/antigravity/github/prime-agent-freebsd-ports/misc/prime-agent) | `prime-agent` | [Bug 298004](https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=298004) | Full Node.js application, TUI, CLI entrypoints, and built-in skill discovery |
+| [`misc/py-prime-agent-runtime`](file:///home/antigravity/github/prime-agent-freebsd-ports/misc/py-prime-agent-runtime) | `py312-prime-agent-runtime` | [Bug 298003](https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=298003) | Python runtime module (`rlm`) for the IPython execution kernel |
 
 ---
 
@@ -65,9 +65,13 @@ Prime Agent by Prime Intellect consists of **two native ports** in the FreeBSD P
 
 ---
 
-## External Dependencies in Ports Tree
+## FreeBSD Ports Bugzilla Status
 
-* **`devel/py-tyro`**: Submitted upstream to FreeBSD Bugzilla: [Bug 297523](https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=297523).
+The ports have been submitted to the official FreeBSD Bugzilla and are awaiting review:
+
+* **`misc/prime-agent`**: [Bug 298004 — [NEW PORT] misc/prime-agent](https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=298004) (Depends on Bug 298003).
+* **`misc/py-prime-agent-runtime`**: [Bug 298003 — [NEW PORT] misc/py-prime-agent-runtime](https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=298003) (Depends on Bug 297523).
+* **`devel/py-tyro`**: [Bug 297523 — [NEW PORT] devel/py-tyro](https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=297523) (Prerequisite runtime dependency).
 
 ---
 
