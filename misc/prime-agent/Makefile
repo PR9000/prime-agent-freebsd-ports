@@ -18,7 +18,7 @@ BUILD_DEPENDS=	cmake:devel/cmake \
 		ninja:devel/ninja \
 		pkgconf:devel/pkgconf \
 		libzmq4>0:net/libzmq4 \
-		npm-node24>0:www/npm-node24
+		npm>0:www/npm
 RUN_DEPENDS=	${PYTHON_PKGNAMEPREFIX}prime-agent-runtime>=0:misc/py-prime-agent-runtime@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}dill>=0.3:devel/py-dill@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}ipykernel>=6.0:devel/py-ipykernel@${PY_FLAVOR} \
@@ -39,7 +39,7 @@ RUN_DEPENDS=	${PYTHON_PKGNAMEPREFIX}prime-agent-runtime>=0:misc/py-prime-agent-r
 		rg:textproc/ripgrep \
 		fd:sysutils/fd
 
-USES=		compiler:c++20-lang nodejs:24,build,run python:3.10+
+USES=		compiler:c++20-lang nodejs:build,run python:3.10+
 
 SUB_FILES=	pkg-message
 SUB_LIST=	PYTHON_PKGNAMEPREFIX=${PYTHON_PKGNAMEPREFIX}
