@@ -16,7 +16,7 @@ jobs:
   build-freebsd:
     name: FreeBSD ${{ matrix.release }} (${{ matrix.arch }})
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 240
     strategy:
       fail-fast: false
       matrix:
