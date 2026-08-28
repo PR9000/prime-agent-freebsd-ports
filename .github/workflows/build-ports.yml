@@ -1,0 +1,124 @@
+name: FreeBSD Ports CI & Release
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-freebsd:
+    name: FreeBSD ${{ matrix.release }} (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    continue-on-error: ${{ matrix.experimental || false }}
+    strategy:
+      fail-fast: false
+      matrix:
+        release: ["14.3", "14.4", "14.5", "15.0", "15.1", "15"]
+        arch: [x86_64, aarch64]
+        include:
+          - release: "14.5"
+            experimental: true
+          - release: "15"
+            experimental: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build FreeBSD Ports in VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: ${{ matrix.release }}
+          arch: ${{ matrix.arch }}
+          mem: 8192
+          cache-after-prepare: true
+          copyback: true
+          prepare: |
+            pkg update -f
+            # Install gitup, SSL certificates, curl, and build tools
+            pkg install -y gitup ca_root_nss curl pkgconf cmake ninja libzmq4 node24 npm-node24 ripgrep fd-find
+          run: |
+            set -e
+
+            echo "===> FreeBSD System Info:"
+            uname -a
+            freebsd-version
+
+            # 1. Fetch FreeBSD Ports tree via gitup
+            echo "===> Updating /usr/ports with gitup..."
+            if [ ! -d "/usr/ports/Mk" ]; then
+              gitup ports
+            fi
+
+            # 2. Download and apply py-tyro patch (Bugzilla #274136)
+            echo "===> Applying py-tyro patch (Bugzilla #274136)..."
+            curl -sSL "https://bugs.freebsd.org/bugzilla/attachment.cgi?id=274136" -o /tmp/py-tyro.patch
+            (cd /usr/ports && patch -p1 < /tmp/py-tyro.patch)
+
+            # 3. Inject local ports from misc/ into /usr/ports/misc/
+            echo "===> Injecting local ports into /usr/ports/misc/..."
+            rm -rf /usr/ports/misc/prime-agent /usr/ports/misc/py-prime-agent-runtime
+            cp -R misc/py-prime-agent-runtime /usr/ports/misc/
+            cp -R misc/prime-agent /usr/ports/misc/
+
+            # 4. Create output directory for artifacts
+            mkdir -p dist-packages
+
+            # 5. Build prerequisite port: devel/py-tyro (built and installed first)
+            echo "===> [1/3] Building and installing devel/py-tyro..."
+            make -C /usr/ports/devel/py-tyro BATCH=yes install-missing-packages package install
+
+            # 6. Build runtime shim port: misc/py-prime-agent-runtime
+            echo "===> [2/3] Building and installing misc/py-prime-agent-runtime..."
+            make -C /usr/ports/misc/py-prime-agent-runtime BATCH=yes install-missing-packages package install
+
+            # 7. Build main port: misc/prime-agent
+            echo "===> [3/3] Building and packaging misc/prime-agent..."
+            make -C /usr/ports/misc/prime-agent BATCH=yes install-missing-packages package
+
+            # 8. Collect all generated .pkg files
+            echo "===> Collecting generated .pkg files..."
+            find /usr/ports/packages/All /usr/ports/devel/py-tyro/work/pkg /usr/ports/misc/py-prime-agent-runtime/work/pkg /usr/ports/misc/prime-agent/work/pkg -name "*.pkg" -exec cp -v {} dist-packages/ \; 2>/dev/null || true
+
+            # 9. Package port definitions into tarballs
+            echo "===> Generating port source tarballs..."
+            tar -czf dist-packages/prime-agent-freebsd-ports-${{ matrix.release }}-${{ matrix.arch }}.tar.gz misc/
+            tar -czf dist-packages/devel-py-tyro-port-${{ matrix.release }}-${{ matrix.arch }}.tar.gz -C /usr/ports/devel py-tyro
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: freebsd-${{ matrix.release }}-${{ matrix.arch }}-packages
+          path: dist-packages/*
+          if-no-files-found: warn
+
+  publish-release:
+    name: Publish Release Assets
+    needs: build-freebsd
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all packages
+        uses: actions/download-artifact@v4
+        with:
+          path: all-packages/
+
+      - name: Create / Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: all-packages/**/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
