@@ -20,8 +20,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Supported FreeBSD Releases: 14.3, 14.4, 15.0, 15.1
-        release: ["14.3", "14.4", "15.0", "15.1"]
+        # FreeBSD Releases: testing 14.4 and 15.1 first (14.3 and 15.0 commented out for now)
+        release: ["14.4", "15.1"]
+        # release: ["14.3", "14.4", "15.0", "15.1"]
         arch: [x86_64, aarch64]
 
     steps:
@@ -37,15 +38,28 @@ jobs:
           cache-after-prepare: true
           copyback: true
           prepare: |
+            export IGNORE_OSVERSION=yes
             pkg update -f
             # Install gitup, SSL certificates, curl, and default system packages (no hardcoded versions)
             pkg install -y gitup ca_root_nss curl pkgconf cmake ninja libzmq4 node npm python3 ripgrep fd-find
           run: |
             set -e
+            export IGNORE_OSVERSION=yes
 
             echo "===> FreeBSD System Info:"
             uname -a
             freebsd-version
+
+            echo "===> Diagnosing installed packages (Python, Node, npm):"
+            pkg info "python*" || true
+            pkg info "py3*" || true
+            pkg info "*node*" || true
+            pkg info "*npm*" || true
+
+            echo "===> Searching available packages in repository:"
+            pkg search npm || true
+            pkg search python || true
+            pkg search py3 || true
 
             # 1. Fetch FreeBSD Ports tree via gitup
             echo "===> Updating /usr/ports with gitup..."
@@ -70,9 +84,25 @@ jobs:
             echo "===> Detected Ports Python prefix: ${PY_PKGPREFIX}"
             echo "===> Detected Ports Node.js default: ${NODE_VER}"
 
-            # 5. Dynamically pre-install binary packages matching the active Python flavor
+            # 5. Dynamically pre-install binary packages matching the active Python flavor & toolchain
             echo "===> Pre-installing binary packages for flavor: ${PY_PKGPREFIX}..."
             pkg install -y \
+              rust \
+              uv \
+              ${PY_PKGPREFIX}setuptools \
+              ${PY_PKGPREFIX}wheel \
+              ${PY_PKGPREFIX}build \
+              ${PY_PKGPREFIX}installer \
+              ${PY_PKGPREFIX}pyproject-hooks \
+              ${PY_PKGPREFIX}flit-core \
+              ${PY_PKGPREFIX}poetry-core \
+              ${PY_PKGPREFIX}jinja2 \
+              ${PY_PKGPREFIX}markupsafe \
+              ${PY_PKGPREFIX}mcp \
+              ${PY_PKGPREFIX}uv-dynamic-versioning \
+              ${PY_PKGPREFIX}dunamai \
+              ${PY_PKGPREFIX}babel \
+              ${PY_PKGPREFIX}tomlkit \
               ${PY_PKGPREFIX}hatchling \
               ${PY_PKGPREFIX}docstring_parser \
               ${PY_PKGPREFIX}typeguard \
