@@ -39,7 +39,7 @@ RUN_DEPENDS=	${PYTHON_PKGNAMEPREFIX}prime-agent-runtime>=0:misc/py-prime-agent-r
 		rg:textproc/ripgrep \
 		fd:sysutils/fd
 
-USES=		compiler:c++20-lang nodejs:build,run python:3.10+
+USES=		compiler:c++20-lang nodejs:build,run python:3.11+
 
 SUB_FILES=	pkg-message
 SUB_LIST=	PYTHON_PKGNAMEPREFIX=${PYTHON_PKGNAMEPREFIX}
@@ -105,9 +105,10 @@ do-build:
 		npm_config_zmq_shared=true \
 		CMAKE_CXX_STANDARD=20 \
 		PATH=${LOCALBASE}/bin:$${PATH} \
-		${LOCALBASE}/bin/node ${WRKSRC_MAIN}/node_modules/cmake-ts/build/main.js nativeonly
+		${LOCALBASE}/bin/node ${WRKSRC_MAIN}/node_modules/cmake-ts/build/main.js build --configs release
 	@${ECHO_MSG} "===>  Cleaning cmake artifacts"
 	${RM} -r ${WRKSRC_MAIN}/node_modules/zeromq/staging 2>/dev/null || ${TRUE}
+	${RM} -rf ${WRKSRC_MAIN}/node_modules/zeromq/.port_stubs 2>/dev/null || ${TRUE}
 	${RM} -f ${WRKSRC_MAIN}/node_modules/zeromq/compile_commands.json 2>/dev/null || ${TRUE}
 	${FIND} ${WRKSRC_MAIN}/node_modules/zeromq -type l -delete 2>/dev/null || ${TRUE}
 	${RM} -rf ${WRKSRC_MAIN}/node_modules/zeromq/script 2>/dev/null || ${TRUE}
@@ -159,15 +160,21 @@ do-install:
 	${INSTALL_SCRIPT} ${WRKDIR}/prime-agent ${PRIME_AGENT_BIN}
 
 post-install:
-	@${ECHO_MSG} "===>  Pruning development artifacts"
+	@${ECHO_MSG} "===>  Pruning development artifacts and leftover patch backups"
+	${FIND} ${NODE_MODULES_BASE} -type f \( -name "*.orig" -o -name "*.rej" \) -delete 2>/dev/null || ${TRUE}
 	${FIND} ${NODE_MODULES_BASE} -name "*.d.ts" -delete 2>/dev/null || ${TRUE}
 	${FIND} ${NODE_MODULES_BASE} -name "*.d.cts" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${NODE_MODULES_BASE} -name "*.js.map" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${NODE_MODULES_BASE} -name "*.cjs.map" -delete 2>/dev/null || ${TRUE}
+	${FIND} ${NODE_MODULES_BASE} -name "*.d.mts" -delete 2>/dev/null || ${TRUE}
+	${FIND} ${NODE_MODULES_BASE} -name "*.map" -delete 2>/dev/null || ${TRUE}
 	${FIND} ${NODE_MODULES_BASE} -name "*.ts" -delete 2>/dev/null || ${TRUE}
-	${FIND} ${NODE_MODULES_BASE} -name "*.orig" -delete 2>/dev/null || ${TRUE}
 	${FIND} ${NODE_MODULES_BASE} -type d -name "test" -exec ${RM} -r {} + 2>/dev/null || ${TRUE}
 	${FIND} ${NODE_MODULES_BASE} -type d -name "__tests__" -exec ${RM} -r {} + 2>/dev/null || ${TRUE}
+	${FIND} ${NODE_MODULES_BASE} -name "*.node" ! -path "*/Release/*" ! -path "*/freebsd/*" -delete 2>/dev/null || ${TRUE}
 	${FIND} ${NODE_MODULES_BASE} -depth -type d -empty -delete 2>/dev/null || ${TRUE}
+
+	@${ECHO_MSG} "===>  Generating dynamic PLIST"
+	@cd ${STAGEDIR}${PREFIX} && \
+		${FIND} bin/prime-agent lib/node_modules/@earendil-works \( -type f -o -type l \) | \
+		${SORT} -u >> ${TMPPLIST}
 
 .include <bsd.port.mk>
