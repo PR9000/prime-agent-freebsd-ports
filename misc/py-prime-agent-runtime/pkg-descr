@@ -1,8 +1,8 @@
 Kernel-side runtime shim that provides the `rlm` module inside the
-Prime Agent IPython kernel. The rlm module exposes the programmatic
+Prime Agent interpreter. The rlm module exposes the programmatic
 interface for spawning recursive sub-agents, managing durable harness
 state (memories, skills, subagent specs, prompt notes), and communicating
 with the daemon host via comm messages.
 
-The runtime is pure Python and integrates with ipykernel, mcp,
-nest-asyncio, and tyro.
+The runtime is pure Python and integrates with the mcp and tyro packages.
+

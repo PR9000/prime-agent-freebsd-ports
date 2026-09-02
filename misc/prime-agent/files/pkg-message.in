@@ -17,6 +17,16 @@ Optional packages to enhance Python skills and data processing:
   - Charting & Visualizations:
       $ pkg install %%PYTHON_PKGNAMEPREFIX%%matplotlib
 
+  - Data Validation & Environment:
+      $ pkg install %%PYTHON_PKGNAMEPREFIX%%lxml %%PYTHON_PKGNAMEPREFIX%%pydantic2 %%PYTHON_PKGNAMEPREFIX%%python-dotenv
+
+  - Web Search & Integrations:
+      $ pkg install %%PYTHON_PKGNAMEPREFIX%%ddgs %%PYTHON_PKGNAMEPREFIX%%PyGithub
+
+  - System Clipboard Support (X11 / Wayland):
+      $ pkg install xclip        # For X11
+      $ pkg install wl-clipboard  # For Wayland
+
 All 13 built-in skills, Node.js CLI, and Python kernel runtime
 are installed and pre-configured out-of-the-box.
 

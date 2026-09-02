@@ -1,6 +1,6 @@
---- pkg-main/dist/bundle/chunk-ZRIBV47F.js.orig	1985-10-26 08:15:00 UTC
-+++ pkg-main/dist/bundle/chunk-ZRIBV47F.js
-@@ -14941,7 +14941,7 @@ async function getLatestPiRelease(currentVersion, opti
+--- pkg-main/dist/bundle/chunk-JZRH5KHN.js.orig
++++ pkg-main/dist/bundle/chunk-JZRH5KHN.js
+@@ -15050,7 +15050,7 @@
    }
  }
  async function getLatestPiRelease(currentVersion, options = {}) {
@@ -9,7 +9,7 @@
      return void 0;
    const baseUrl = getPrimeAgentDownloadBaseUrl();
    const response = await fetch(`${baseUrl}/${getReleaseManifestPath(currentVersion)}`, {
-@@ -14972,6 +14972,9 @@ async function checkForNewPiVersion(currentVersion) {
+@@ -15081,6 +15081,9 @@
    return (await getLatestPiRelease(currentVersion, options))?.version;
  }
  async function checkForNewPiVersion(currentVersion) {
@@ -19,7 +19,7 @@
    try {
      const latestVersion = await getLatestPiVersion(currentVersion);
      if (latestVersion && isNewerPackageVersion(latestVersion, currentVersion)) {
-@@ -16096,51 +16099,9 @@ async function handlePackageCommand(args) {
+@@ -16205,51 +16208,9 @@
            }
          }
          if (updateTargetIncludesSelf(target)) {
@@ -74,7 +74,7 @@
          }
          return true;
        }
-@@ -32219,8 +32180,14 @@ var TERMUX_PACKAGES = {
+@@ -33203,8 +33164,14 @@
    fd: "fd",
    rg: "ripgrep"
  };
@@ -89,7 +89,7 @@
      case "darwin":
        return "Install it with: brew install ripgrep";
      case "linux":
-@@ -32240,7 +32207,7 @@ function formatMissingRipgrepMessage(result) {
+@@ -33224,7 +33191,7 @@
        reason = "Automatic installation was skipped because PI_OFFLINE is enabled.";
        break;
      case "manual_install_required":
@@ -98,7 +98,7 @@
        break;
      case "unsupported_platform":
        reason = `Automatic installation is unavailable for ${result.platform}/${result.architecture}.`;
-@@ -32271,6 +32238,18 @@ async function ensureToolWithStatus(tool, silent = tru
+@@ -33255,6 +33222,18 @@
      }
      return { status: "unavailable", reason: "offline", platform: platformName, architecture };
    }
@@ -117,7 +117,7 @@
    if (platformName === "android") {
      const pkgName = TERMUX_PACKAGES[tool] ?? tool;
      if (!silent) {
-@@ -48464,6 +48443,10 @@ ${result.message}`);
+@@ -54033,6 +54012,10 @@
      }
    }
    async handleUpdateCommand(args) {

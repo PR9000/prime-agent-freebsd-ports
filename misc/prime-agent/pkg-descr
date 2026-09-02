@@ -1,11 +1,11 @@
 Prime Agent is an open-source, self-improving AI coding assistant
-powered by an IPython-backed execution kernel. It supports multi-turn
+powered by a persistent Python REPL kernel. It supports multi-turn
 agentic coding, multi-provider LLMs, tool calling, conversation
 persistence, and a rich terminal user interface.
 
 Features:
   - Interactive terminal UI and autonomous agent loop
-  - Embedded Python kernel with ZeroMQ communication
+  - Embedded Python REPL with comm-based daemon communication
   - Built-in skills for web search, linear, notion, images, and tools
   - Support for multiple LLM providers (Prime Intellect, Anthropic,
     OpenAI, etc.)

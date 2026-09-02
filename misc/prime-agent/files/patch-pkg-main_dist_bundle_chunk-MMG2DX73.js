@@ -1,6 +1,39 @@
---- pkg-main/dist/core/tools/ipython.js.orig
-+++ pkg-main/dist/core/tools/ipython.js
-@@ -71,11 +71,49 @@
+--- pkg-main/dist/bundle/chunk-MMG2DX73.js.orig
++++ pkg-main/dist/bundle/chunk-MMG2DX73.js
+@@ -11059,6 +11059,9 @@
+   };
+ }
+ function detectInstallMethod() {
++  if (process.platform === "freebsd") {
++    return "freebsd";
++  }
+   if (isBunBinary) {
+     return "bun-binary";
+   }
+@@ -11235,6 +11238,9 @@
+ }
+ function getSelfUpdateUnavailableInstruction(packageName, npmCommand, updateSpec = packageName, updatePackageName = getDefaultUpdatePackageName(packageName, updateSpec)) {
+   const method = detectInstallMethod();
++  if (method === "freebsd") {
++    return "Prime Agent is managed by the FreeBSD pkg(8) package manager. To update, run: sudo pkg upgrade prime-agent or doas pkg upgrade prime-agent";
++  }
+   if (method === "bun-binary") {
+     return `Download from: https://github.com/PrimeIntellect-ai/prime-agent/releases/latest`;
+   }
+@@ -42529,7 +42535,11 @@
+     if (missing.length === 0) {
+       const missingExtraImports = await missingRlmExtraImportLabels(python2);
+       if (missingExtraImports.length > 0) {
+-        missing.push(`default Python packages (${missingExtraImports.join(", ")})`);
++        if (process.platform === "freebsd") {
++          reportProgress(options, `Warning: Default Python packages unavailable in PRIME_AGENT_KERNEL_PYTHON and will be disabled: ${missingExtraImports.join(", ")}`);
++        } else {
++          missing.push(`default Python packages (${missingExtraImports.join(", ")})`);
++        }
+       }
+     }
+     if (missing.length === 0 && pythonSkills.length > 0) {
+@@ -50887,16 +50897,55 @@
              return await result
          return result
  
@@ -52,12 +85,11 @@
  
      async def run(self, *args, **kwargs):
          raise RuntimeError(
-@@ -87,7 +122,7 @@
-         return await self.run(*args, **kwargs)
+-            f"Python skill {self.__name__} is unavailable in this kernel. "
+-            f"Import error: {self._prime_agent_import_error}"
++            f"Python skill '{self.__name__}' is unavailable on FreeBSD. "
++            f"Missing module dependency. To fix: {self._prime_agent_hint}. "
++            f"Original import error: {self._prime_agent_import_error}"
+         )
  
-     def __repr__(self):
--        return f"<unavailable Python skill {self.__name__!r}: {self._prime_agent_import_error}>"
-+        return f"<unavailable Python skill {self.__name__!r} (missing dependency: {self._prime_agent_hint})>"
- 
- def _prime_agent_wrap_skill_module(module):
-     run = getattr(module, "run", None)
+     async def __call__(self, *args, **kwargs):

@@ -1,6 +1,6 @@
---- pkg-main/dist/package-manager-cli.js.orig	1985-10-26 08:15:00 UTC
+--- pkg-main/dist/package-manager-cli.js.orig
 +++ pkg-main/dist/package-manager-cli.js
-@@ -1271,56 +1271,9 @@ export async function handlePackageCommand(args) {
+@@ -1271,56 +1271,9 @@
                      }
                  }
                  if (updateTargetIncludesSelf(target)) {
